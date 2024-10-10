@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Plan Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #3c8dbc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"], textarea {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #3c8dbc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        input[type="submit"]:hover {
+            background-color: #357ca5;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e2e2e2;
+            border-radius: 5px;
+            text-align: center;
+        }
+        textarea {
+            height: 200px;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Email Plan Generator</h1>
+</header>
+
+<div class="container">
+    <h2>Upload CSV and Set Your Plan</h2>
+    <form id="emailForm" action="/process-emails" method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="emailFile">Upload your CSV file with emails:</label>
+            <input type="file" id="emailFile" name="emailFile" accept=".csv" required>
+        </div>
+
+        <div>
+            <label for="dailyPlan">Enter daily email plan (one number per line):</label>
+            <textarea id="dailyPlan" name="dailyPlan" placeholder="100\n150\n200\n..." required></textarea>
+        </div>
+
+        <input type="submit" value="Generate CSV Files">
+    </form>
+
+    <div class="output">
+        <p>Once you submit the form, you will receive a ZIP file with CSVs for each day.</p>
+    </div>
+</div>
+
+</body>
+</html>
