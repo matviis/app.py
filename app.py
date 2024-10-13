@@ -87,11 +87,17 @@ def load_and_clean_csv(file_path):
         if df.empty:
             raise ValueError("CSV file is empty.")
         
+        # Выведем структуру файла для диагностики
+        print("Структура файла:")
+        print(df.head())  # Вывод первых 5 строк файла для диагностики
+        
         # Проверяем, если в заголовках столбцов нет почт, принудительно задаём заголовки
         if not any(df.columns.str.contains('@')):
             print("Заголовков с почтами нет, читаем файл без заголовков.")
             df = pd.read_csv(file_path, header=None)
             df.columns = [f"col_{i}" for i in range(len(df.columns))]  # Присваиваем временные названия столбцов
+            print("Новая структура файла после добавления заголовков:")
+            print(df.head())  # Вывод структуры после присвоения заголовков
         
         # Автоматически определяем, в каком столбце находятся email-адреса
         email_column = detect_email_column(df)
@@ -100,6 +106,7 @@ def load_and_clean_csv(file_path):
         
         print(f"Найден столбец с email: {email_column}")
         emails_df = pd.DataFrame(df[email_column], columns=["email"])
+        print("Первые строки с почтами:")
         print(emails_df.head())  # Отладка: вывод первых строк с почтами
         return emails_df
     except Exception as e:
