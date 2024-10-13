@@ -89,7 +89,9 @@ def load_and_clean_csv(file_path):
         if email_column is None:
             raise ValueError("No column with valid emails found.")
         
+        print(f"Найден столбец с email: {email_column}")
         emails_df = pd.DataFrame(df[email_column], columns=["email"])
+        print(emails_df.head())  # Отладка: вывод первых строк с почтами
         return emails_df
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
