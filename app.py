@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from io import BytesIO
 import zipfile
-import random
 
 app = Flask(__name__)
 
@@ -20,26 +19,35 @@ def index():
 # Обработка формы и генерация файлов
 @app.route('/process-emails', methods=['POST'])
 def process_emails():
-    # Получение файла и данных формы
-    email_file = request.files['emailFile']
+    # Получение файлов и данных формы
+    email_file_1 = request.files['emailFile1']
+    email_file_2 = request.files['emailFile2']
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
-    segment_percentage = request.form.get('segmentPercentage')  # Получаем процент сегмента
-    segment_percentage = float(segment_percentage) if segment_percentage else 100.0
 
-    # Сохранение загруженного файла
-    file_path = os.path.join(UPLOAD_FOLDER, email_file.filename)
-    email_file.save(file_path)
+    # Получаем проценты для разделения между двумя базами данных
+    percentage_1 = float(request.form.get('percentage1', 0))
+    percentage_2 = float(request.form.get('percentage2', 0))
 
-    # Загрузка CSV и очистка
-    emails_df = load_and_clean_csv(file_path)
+    # Сохраняем загруженные файлы
+    file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
+    file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
+    email_file_1.save(file_path_1)
+    email_file_2.save(file_path_2)
 
-    # Если указан процент сегмента, выбираем случайную часть пользователей
-    if segment_percentage < 100:
-        emails_df = select_random_segment(emails_df, segment_percentage)
+    # Загружаем и очищаем данные из обоих файлов
+    emails_df_1 = load_and_clean_csv(file_path_1)
+    emails_df_2 = load_and_clean_csv(file_path_2)
+
+    # Получаем нужные проценты из каждой базы
+    segment_1 = select_random_segment(emails_df_1, percentage_1)
+    segment_2 = select_random_segment(emails_df_2, percentage_2)
+
+    # Объединяем два сегмента в один DataFrame
+    combined_emails_df = pd.concat([segment_1, segment_2])
 
     # Разделение по дневному плану
-    daily_email_batches = split_emails_by_plan(emails_df, daily_plan)
+    daily_email_batches = split_emails_by_plan(combined_emails_df, daily_plan)
 
     # Сохранение каждого дня в отдельный CSV
     zip_buffer = BytesIO()
