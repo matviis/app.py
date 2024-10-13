@@ -76,6 +76,7 @@
             resize: vertical;
             height: 150px;
         }
+        /* Кнопка с анимацией */
         input[type="submit"] {
             background-color: #4a90e2;
             color: white;
@@ -85,16 +86,18 @@
             cursor: pointer;
             border-radius: 8px;
             width: 100%;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }
         input[type="submit"]:hover {
             background-color: #357ab9;
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
         }
         input[type="submit"]:active {
             background-color: #2e6ca5;
             transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }
         .form-group {
             width: 100%;
@@ -130,6 +133,63 @@
             color: #006064;
             padding: 5px;
             border-radius: 4px;
+        }
+
+        /* Медиазапросы для адаптивности */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 30px;
+            }
+            h2 {
+                font-size: 2rem;
+            }
+            header h1 {
+                font-size: 2.5rem;
+            }
+        }
+        @media (max-width: 992px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.8rem;
+            }
+            input[type="submit"] {
+                font-size: 1.2rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+            h2 {
+                font-size: 1.6rem;
+            }
+            input[type="submit"] {
+                padding: 12px 25px;
+                font-size: 1.1rem;
+            }
+            textarea {
+                height: 120px;
+            }
+        }
+        @media (max-width: 576px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+            h2 {
+                font-size: 1.4rem;
+            }
+            input[type="submit"] {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            .container {
+                padding: 15px;
+            }
         }
     </style>
 </head>
