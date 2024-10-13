@@ -22,52 +22,49 @@ def index():
 def process_emails():
     # Получение файлов и данных формы
     email_file_1 = request.files['emailFile1']
-    percentage_1 = float(request.form.get('percentage1', 100))  # По умолчанию 100%
-    
-    # Получение второго файла и процента, если предоставлено
-    email_file_2 = request.files.get('emailFile2')
-    percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0
+    percentage_1 = float(request.form.get('percentage1', 100))  # Процент из первого файла
+    email_file_2 = request.files.get('emailFile2')  # Второй файл (может быть необязательным)
+    percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0  # Процент из второго файла
 
-    # Получаем план по дням, имя файлов и ключевые слова (домены)
+    # Получаем план по дням, имя файлов и ключевые слова для удаления доменов
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
-    daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
-    base_filename = request.form.get('baseFilename', 'emails')  # Имя файлов, по умолчанию "emails"
-    keyword_input = request.form.get('keyword')  # Получаем ключевые слова
+    daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа
+    base_filename = request.form.get('baseFilename', 'emails')  # Имя файлов по умолчанию
+    keyword_input = request.form.get('keyword')  # Ключевые слова для удаления строк (например, домены)
 
-    # Сохранение загруженных файлов
+    # Сохраняем загруженные файлы
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
     email_file_1.save(file_path_1)
     emails_df_1 = load_and_clean_csv(file_path_1)
-    segment_1 = select_random_segment(emails_df_1, percentage_1)
 
     if email_file_2:
         file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
         email_file_2.save(file_path_2)
         emails_df_2 = load_and_clean_csv(file_path_2)
-        segment_2 = select_random_segment(emails_df_2, percentage_2)
-        combined_emails_df = pd.concat([segment_1, segment_2])
     else:
-        combined_emails_df = segment_1
+        emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
 
-    # Удаление строк, содержащих ключевые слова (домены)
+    # Удаление строк по ключевым словам, если они указаны
     if keyword_input:
         keywords = [kw.strip() for kw in keyword_input.split(',')]  # Разделяем ключевые слова по запятой
-        combined_emails_df = remove_rows_with_keywords(combined_emails_df, keywords)
+        emails_df_1 = remove_rows_with_keywords(emails_df_1, keywords)
+        if not emails_df_2.empty:
+            emails_df_2 = remove_rows_with_keywords(emails_df_2, keywords)
 
-    # Разделение по дневному плану
-    daily_email_batches = split_emails_by_plan(combined_emails_df, daily_plan)
+    # Разделение email-адресов по плану на каждый день
+    daily_email_batches = split_emails_by_percentage(emails_df_1, emails_df_2, percentage_1, percentage_2, daily_plan)
 
-    # Сохранение каждого дня в отдельный CSV с пользовательским именем файлов
+    # Генерация ZIP файла с результатами
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w') as z:
         for i, batch in enumerate(daily_email_batches, start=1):
-            file_name = f'{base_filename}_day_{i}.csv'  # Измененное имя файла
+            file_name = f'{base_filename}_day_{i}.csv'
             csv_buffer = batch.to_csv(index=False, header=["email"], encoding='utf-8')
             z.writestr(file_name, csv_buffer)
-    
+
     zip_buffer.seek(0)
 
-    # Возврат сгенерированного ZIP файла
+    # Отправляем ZIP файл клиенту
     return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='emails.zip')
 
 def load_and_clean_csv(file_path):
@@ -98,45 +95,48 @@ def detect_email_column(df):
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Регулярное выражение для email
 
     for column in df.columns:
-        # Проверяем каждый столбец
         if df[column].apply(lambda x: isinstance(x, str) and bool(re.match(email_pattern, x))).mean() > 0.5:
-            # Если более 50% значений в столбце соответствуют шаблону email, считаем его столбцом с почтами
             return column
+    return None
 
-    return None  # Возвращает None, если столбец с почтами не найден
-
-def split_emails_by_plan(emails_df, daily_plan):
+def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan):
     """
-    Разделяет emails_df на блоки в зависимости от плана.
-    Возвращает список DataFrame'ов для каждого дня.
+    Разделяет email-адреса по дням с учётом процентного соотношения.
+    df1 и df2 - базы данных, процентное соотношение percentage_1 и percentage_2,
+    daily_plan - список с количеством почт на каждый день.
     """
-    start = 0
-    daily_email_batches = []
+    daily_batches = []
+    start_1 = 0
+    start_2 = 0
 
     for emails_per_day in daily_plan:
-        end = start + emails_per_day
-        daily_email_batches.append(emails_df.iloc[start:end])
-        start = end
-    
-    return daily_email_batches
+        # Рассчитываем, сколько почт нужно взять из каждого файла на этот день
+        count_1 = int(emails_per_day * (percentage_1 / 100))
+        count_2 = emails_per_day - count_1  # Остальное из второго файла
 
-def select_random_segment(emails_df, percentage):
-    """
-    Выбирает случайный процент сегмента пользователей из базы данных.
-    """
-    total_emails = len(emails_df)
-    sample_size = int(total_emails * (percentage / 100))
-    return emails_df.sample(n=sample_size)
+        # Берём нужное количество почт
+        batch_1 = df1.iloc[start_1:start_1 + count_1]
+        batch_2 = df2.iloc[start_2:start_2 + count_2]
+
+        # Объединяем их
+        combined_batch = pd.concat([batch_1, batch_2]).reset_index(drop=True)
+        daily_batches.append(combined_batch)
+
+        # Обновляем стартовые индексы для следующего дня
+        start_1 += count_1
+        start_2 += count_2
+
+    return daily_batches
 
 def remove_rows_with_keywords(emails_df, keywords):
     """
-    Удаляет строки, содержащие одно из ключевых слов (доменов), и смещает оставшиеся строки вверх.
+    Удаляет строки, содержащие одно из ключевых слов (доменов).
     """
-    pattern = '|'.join(keywords)  # Объединяем ключевые слова через '|', чтобы использовать в регулярном выражении
+    pattern = '|'.join(keywords)
     filtered_emails_df = emails_df[~emails_df['email'].str.contains(pattern, case=False, na=False)]
-    filtered_emails_df.reset_index(drop=True, inplace=True)  # Сброс индексов, чтобы не было пропусков
+    filtered_emails_df.reset_index(drop=True, inplace=True)
     return filtered_emails_df
 
-# Запуск приложения с учетом порта, установленного Render или локального порта 5000
+# Запуск приложения с учётом порта
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
