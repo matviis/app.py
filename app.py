@@ -19,32 +19,32 @@ def index():
 # Обработка формы и генерация файлов
 @app.route('/process-emails', methods=['POST'])
 def process_emails():
-    # Получение файлов и данных формы
+    # Получение первого файла и процента
     email_file_1 = request.files['emailFile1']
-    email_file_2 = request.files['emailFile2']
+    percentage_1 = float(request.form.get('percentage1', 100))  # По умолчанию 100%
+    
+    # Получение второго файла и процента, если предоставлено
+    email_file_2 = request.files.get('emailFile2')
+    percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0
+
+    # Получаем план по дням
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
 
-    # Получаем проценты для разделения между двумя базами данных
-    percentage_1 = float(request.form.get('percentage1', 0))
-    percentage_2 = float(request.form.get('percentage2', 0))
-
-    # Сохраняем загруженные файлы
+    # Сохранение загруженных файлов
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
-    file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
     email_file_1.save(file_path_1)
-    email_file_2.save(file_path_2)
-
-    # Загружаем и очищаем данные из обоих файлов
     emails_df_1 = load_and_clean_csv(file_path_1)
-    emails_df_2 = load_and_clean_csv(file_path_2)
-
-    # Получаем нужные проценты из каждой базы
     segment_1 = select_random_segment(emails_df_1, percentage_1)
-    segment_2 = select_random_segment(emails_df_2, percentage_2)
 
-    # Объединяем два сегмента в один DataFrame
-    combined_emails_df = pd.concat([segment_1, segment_2])
+    if email_file_2:
+        file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
+        email_file_2.save(file_path_2)
+        emails_df_2 = load_and_clean_csv(file_path_2)
+        segment_2 = select_random_segment(emails_df_2, percentage_2)
+        combined_emails_df = pd.concat([segment_1, segment_2])
+    else:
+        combined_emails_df = segment_1
 
     # Разделение по дневному плану
     daily_email_batches = split_emails_by_plan(combined_emails_df, daily_plan)
