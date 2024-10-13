@@ -44,12 +44,12 @@ def process_emails():
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
 
-    # Удаление строк по ключевым словам, если они указаны
+    # Фильтрация доменов: просто пропускаем строки с доменами, но не удаляем
     if keyword_input:
         keywords = [kw.strip() for kw in keyword_input.split(',')]  # Разделяем ключевые слова по запятой
-        emails_df_1 = remove_rows_with_keywords(emails_df_1, keywords)
+        emails_df_1 = filter_rows_with_keywords(emails_df_1, keywords)
         if not emails_df_2.empty:
-            emails_df_2 = remove_rows_with_keywords(emails_df_2, keywords)
+            emails_df_2 = filter_rows_with_keywords(emails_df_2, keywords)
 
     # Разделение email-адресов по плану на каждый день
     daily_email_batches = split_emails_by_percentage(emails_df_1, emails_df_2, percentage_1, percentage_2, daily_plan)
@@ -128,13 +128,12 @@ def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan)
 
     return daily_batches
 
-def remove_rows_with_keywords(emails_df, keywords):
+def filter_rows_with_keywords(emails_df, keywords):
     """
-    Удаляет строки, содержащие одно из ключевых слов (доменов).
+    Пропускает строки, содержащие одно из ключевых слов (доменов).
     """
     pattern = '|'.join(keywords)
     filtered_emails_df = emails_df[~emails_df['email'].str.contains(pattern, case=False, na=False)]
-    filtered_emails_df.reset_index(drop=True, inplace=True)
     return filtered_emails_df
 
 # Запуск приложения с учётом порта
