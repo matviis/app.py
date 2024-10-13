@@ -44,7 +44,14 @@ def process_emails():
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
 
-    # Фильтрация доменов: просто пропускаем строки с доменами, но не удаляем
+    # Отладочная информация
+    print(f"Первый файл содержит {len(emails_df_1)} email-адресов.")
+    if not emails_df_2.empty:
+        print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")
+    else:
+        print("Второй файл не предоставлен или пустой.")
+
+    # Фильтрация доменов: пропуск строк с доменами
     if keyword_input:
         keywords = [kw.strip() for kw in keyword_input.split(',')]  # Разделяем ключевые слова по запятой
         emails_df_1 = filter_rows_with_keywords(emails_df_1, keywords)
@@ -113,6 +120,8 @@ def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan)
         # Рассчитываем, сколько почт нужно взять из каждого файла на этот день
         count_1 = int(emails_per_day * (percentage_1 / 100))
         count_2 = emails_per_day - count_1  # Остальное из второго файла
+
+        print(f"На день нужно взять {count_1} из первого файла и {count_2} из второго файла.")
 
         # Берём нужное количество почт
         batch_1 = df1.iloc[start_1:start_1 + count_1]
