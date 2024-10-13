@@ -117,36 +117,43 @@
 <div class="container">
     <h2>Upload CSV and Set Your Plan</h2>
     <form id="emailForm" action="/process-emails" method="POST" enctype="multipart/form-data">
+        <!-- Форма для загрузки первого файла -->
         <div class="form-group">
             <label for="emailFile1">Upload first CSV file with emails:</label>
             <input type="file" id="emailFile1" name="emailFile1" accept=".csv" required>
         </div>
-        
+
+        <!-- Процент почт из первого файла -->
         <div class="form-group">
             <label for="percentage1">Percentage from first file:</label>
             <input type="number" id="percentage1" name="percentage1" placeholder="e.g., 20" min="1" max="100" required>
         </div>
 
+        <!-- Форма для загрузки второго файла -->
         <div class="form-group">
             <label for="emailFile2">Upload second CSV file with emails (optional):</label>
             <input type="file" id="emailFile2" name="emailFile2" accept=".csv">
         </div>
 
+        <!-- Процент почт из второго файла -->
         <div class="form-group">
             <label for="percentage2">Percentage from second file (optional):</label>
             <input type="number" id="percentage2" name="percentage2" placeholder="e.g., 80" min="1" max="100">
         </div>
 
+        <!-- План по количеству почт на каждый день -->
         <div class="form-group">
             <label for="dailyPlan">Enter daily email plan (one number per line):</label>
             <textarea id="dailyPlan" name="dailyPlan" placeholder="100\n150\n200\n..." required></textarea>
         </div>
 
+        <!-- Поле для ввода базового имени файлов -->
         <div class="form-group">
             <label for="baseFilename">Base filename for CSV files:</label>
             <input type="text" id="baseFilename" name="baseFilename" placeholder="e.g., my_emails">
         </div>
 
+        <!-- Поле для фильтрации по доменам -->
         <div class="form-group">
             <label for="keyword">Enter keywords to remove rows (optional, separate with commas):</label>
             <input type="text" id="keyword" name="keyword" placeholder="e.g., yandex.ru, gmail.com">
