@@ -41,6 +41,7 @@ def process_emails():
         file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
         email_file_2.save(file_path_2)
         emails_df_2 = load_and_clean_csv(file_path_2)
+        print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")  # Отладка второго файла
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
 
@@ -83,7 +84,7 @@ def load_and_clean_csv(file_path):
         if df.empty:
             raise ValueError("CSV file is empty.")
         
-        # Определим столбец с почтами
+        # Автоматически определяем, в каком столбце находятся email-адреса
         email_column = detect_email_column(df)
         if email_column is None:
             raise ValueError("No column with valid emails found.")
@@ -102,9 +103,12 @@ def detect_email_column(df):
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Регулярное выражение для email
 
     for column in df.columns:
+        # Проверяем каждый столбец, применяя регулярное выражение для email-адресов
         if df[column].apply(lambda x: isinstance(x, str) and bool(re.match(email_pattern, x))).mean() > 0.5:
+            print(f"Столбец с почтами найден: {column}")
             return column
-    return None
+
+    return None  # Возвращает None, если столбец с почтами не найден
 
 def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan):
     """
