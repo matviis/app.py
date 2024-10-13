@@ -38,7 +38,7 @@
             font-weight: bold;
             color: #555;
         }
-        input[type="file"], textarea {
+        input[type="file"], input[type="number"], textarea {
             padding: 10px;
             font-size: 1rem;
             border: 1px solid #ddd;
@@ -86,6 +86,11 @@
         <div>
             <label for="dailyPlan">Enter daily email plan (one number per line):</label>
             <textarea id="dailyPlan" name="dailyPlan" placeholder="100\n150\n200\n..." required></textarea>
+        </div>
+
+        <div>
+            <label for="segmentPercentage">Segment percentage (optional):</label>
+            <input type="number" id="segmentPercentage" name="segmentPercentage" placeholder="e.g., 50" min="1" max="100">
         </div>
 
         <input type="submit" value="Generate CSV Files">
