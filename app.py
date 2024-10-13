@@ -19,7 +19,7 @@ def index():
 # Обработка формы и генерация файлов
 @app.route('/process-emails', methods=['POST'])
 def process_emails():
-    # Получение первого файла и процента
+    # Получение файлов и данных формы
     email_file_1 = request.files['emailFile1']
     percentage_1 = float(request.form.get('percentage1', 100))  # По умолчанию 100%
     
@@ -27,9 +27,10 @@ def process_emails():
     email_file_2 = request.files.get('emailFile2')
     percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0
 
-    # Получаем план по дням
+    # Получаем план по дням и имя файлов
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
+    base_filename = request.form.get('baseFilename', 'emails')  # Имя файлов, по умолчанию "emails"
 
     # Сохранение загруженных файлов
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
@@ -49,11 +50,11 @@ def process_emails():
     # Разделение по дневному плану
     daily_email_batches = split_emails_by_plan(combined_emails_df, daily_plan)
 
-    # Сохранение каждого дня в отдельный CSV
+    # Сохранение каждого дня в отдельный CSV с пользовательским именем файлов
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w') as z:
         for i, batch in enumerate(daily_email_batches, start=1):
-            file_name = f'day_{i}_emails.csv'
+            file_name = f'{base_filename}_day_{i}.csv'  # Измененное имя файла
             csv_buffer = batch.to_csv(index=False, header=["email"], encoding='utf-8')
             z.writestr(file_name, csv_buffer)
     
