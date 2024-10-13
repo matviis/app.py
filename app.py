@@ -87,10 +87,11 @@ def load_and_clean_csv(file_path):
         if df.empty:
             raise ValueError("CSV file is empty.")
         
-        # Определяем, есть ли заголовки. Если нет, читаем файл без заголовков.
-        if not df.columns.str.contains('@').any():
-            print("Заголовков нет или они неправильные. Прочитаем файл без заголовков.")
+        # Проверяем, если в заголовках столбцов нет почт, принудительно задаём заголовки
+        if not any(df.columns.str.contains('@')):
+            print("Заголовков с почтами нет, читаем файл без заголовков.")
             df = pd.read_csv(file_path, header=None)
+            df.columns = [f"col_{i}" for i in range(len(df.columns))]  # Присваиваем временные названия столбцов
         
         # Автоматически определяем, в каком столбце находятся email-адреса
         email_column = detect_email_column(df)
