@@ -1,3 +1,4 @@
+import re
 from flask import Flask, request, render_template, send_file
 import pandas as pd
 import os
@@ -71,12 +72,38 @@ def process_emails():
 
 def load_and_clean_csv(file_path):
     """
-    Загружает CSV и оставляет только второй столбец с почтами.
+    Загружает CSV и автоматически определяет столбец с почтами.
     """
-    df = pd.read_csv(file_path)
-    email_column = df.iloc[:, 1]  # Второй столбец
-    emails_df = pd.DataFrame(email_column, columns=["email"])
-    return emails_df
+    try:
+        df = pd.read_csv(file_path)
+        if df.empty:
+            raise ValueError("CSV file is empty.")
+        
+        # Определим столбец с почтами
+        email_column = detect_email_column(df)
+        if email_column is None:
+            raise ValueError("No column with valid emails found.")
+        
+        emails_df = pd.DataFrame(df[email_column], columns=["email"])
+        return emails_df
+    except Exception as e:
+        print(f"Error processing file {file_path}: {e}")
+        raise
+
+def detect_email_column(df):
+    """
+    Определяет, какой столбец содержит email-адреса.
+    Возвращает название столбца, если найдено.
+    """
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Регулярное выражение для email
+
+    for column in df.columns:
+        # Проверяем каждый столбец
+        if df[column].apply(lambda x: isinstance(x, str) and re.match(email_pattern, x)).mean() > 0.5:
+            # Если более 50% значений в столбце соответствуют шаблону email, считаем его столбцом с почтами
+            return column
+
+    return None  # Возвращает None, если столбец с почтами не найден
 
 def split_emails_by_plan(emails_df, daily_plan):
     """
