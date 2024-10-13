@@ -27,10 +27,11 @@ def process_emails():
     email_file_2 = request.files.get('emailFile2')
     percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0
 
-    # Получаем план по дням и имя файлов
+    # Получаем план по дням, имя файлов и ключевое слово
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
     base_filename = request.form.get('baseFilename', 'emails')  # Имя файлов, по умолчанию "emails"
+    keyword = request.form.get('keyword')  # Ключевое слово для удаления строк
 
     # Сохранение загруженных файлов
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
@@ -46,6 +47,10 @@ def process_emails():
         combined_emails_df = pd.concat([segment_1, segment_2])
     else:
         combined_emails_df = segment_1
+
+    # Удаление строк, содержащих ключевое слово
+    if keyword:
+        combined_emails_df = remove_rows_with_keyword(combined_emails_df, keyword)
 
     # Разделение по дневному плану
     daily_email_batches = split_emails_by_plan(combined_emails_df, daily_plan)
@@ -94,6 +99,14 @@ def select_random_segment(emails_df, percentage):
     total_emails = len(emails_df)
     sample_size = int(total_emails * (percentage / 100))
     return emails_df.sample(n=sample_size)
+
+def remove_rows_with_keyword(emails_df, keyword):
+    """
+    Удаляет строки, содержащие ключевое слово, и смещает оставшиеся строки вверх.
+    """
+    filtered_emails_df = emails_df[~emails_df['email'].str.contains(keyword, case=False, na=False)]
+    filtered_emails_df.reset_index(drop=True, inplace=True)  # Сброс индексов, чтобы не было пропусков
+    return filtered_emails_df
 
 # Запуск приложения с учетом порта, установленного Render или локального порта 5000
 if __name__ == '__main__':
