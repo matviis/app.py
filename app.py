@@ -99,7 +99,7 @@ def detect_email_column(df):
 
     for column in df.columns:
         # Проверяем каждый столбец
-        if df[column].apply(lambda x: isinstance(x, str) and re.match(email_pattern, x)).mean() > 0.5:
+        if df[column].apply(lambda x: isinstance(x, str) and bool(re.match(email_pattern, x))).mean() > 0.5:
             # Если более 50% значений в столбце соответствуют шаблону email, считаем его столбцом с почтами
             return column
 
