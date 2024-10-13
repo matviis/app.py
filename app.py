@@ -3,7 +3,7 @@ import re
 
 # Функция для поиска столбца с email-адресами
 def find_email_column(df):
-    email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')  # Регулярное выражение для email
     
     for column in df.columns:
         # Проверяем, есть ли в столбце хотя бы одно значение, соответствующее формату email
@@ -41,18 +41,18 @@ def process_emails_v2(emails_first, emails_second, day_plan):
     return results
 
 # Пример загрузки файлов
-first_file_path = 'path_to_first_file.csv'
-second_file_path = 'path_to_second_file.csv'
+first_file_path = 'path_to_first_file.csv'  # Путь к первому файлу
+second_file_path = 'path_to_second_file.csv'  # Путь ко второму файлу
 
-first_file = pd.read_csv(first_file_path)
-second_file = pd.read_csv(second_file_path)
+first_file = pd.read_csv(first_file_path)  # Загрузка первого файла
+second_file = pd.read_csv(second_file_path)  # Загрузка второго файла
 
 # Находим столбцы с email в обоих файлах
-emails_first = find_email_column(first_file)
-emails_second = find_email_column(second_file)
+emails_first = find_email_column(first_file)  # Поиск email-адресов в первом файле
+emails_second = find_email_column(second_file)  # Поиск email-адресов во втором файле
 
 # План на день (например, [(10, 40), (20, 80), ...])
-day_plan = [(10, 40), (20, 80), (40, 160), (60, 240)]
+day_plan = [(10, 40), (20, 80), (40, 160), (60, 240)]  # Пример плана выборки на каждый день
 
 # Обработка email-адресов по дневному плану
 results_v2 = process_emails_v2(emails_first, emails_second, day_plan)
