@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Plan Generator</title>
     <style>
-        /* Основные стили */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f7f7f7;
             margin: 0;
             padding: 0;
             color: #333;
-            overflow-x: hidden;
         }
         header {
             background-color: #4a90e2;
@@ -20,14 +18,11 @@
             padding: 20px;
             text-align: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            animation: slideDown 1s ease-out;
         }
         header h1 {
             font-size: 3rem;
             margin: 0;
             font-weight: 700;
-            opacity: 0;
-            animation: fadeIn 2s forwards 0.5s;
         }
         .container {
             max-width: 900px;
@@ -36,8 +31,6 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 1s ease-out forwards;
-            opacity: 0;
         }
         h2 {
             color: #4a90e2;
@@ -45,18 +38,12 @@
             margin-bottom: 20px;
             text-align: center;
             font-weight: 600;
-            transform: translateY(20px);
-            opacity: 0;
-            animation: fadeInUp 1s forwards 0.3s;
         }
         form {
             display: flex;
             flex-direction: column;
             gap: 25px;
             align-items: center;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1s forwards 0.5s;
         }
         label {
             font-weight: 600;
@@ -64,7 +51,6 @@
             font-size: 1.2rem;
             margin-bottom: 10px;
             width: 100%;
-            transition: color 0.3s ease;
         }
         input[type="file"], input[type="number"], input[type="text"], textarea {
             width: 100%;
@@ -76,26 +62,6 @@
         }
         input[type="file"] {
             background-color: #f9f9f9;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        input[type="file"]::before {
-            content: 'Choose File';
-            position: absolute;
-            top: 50%;
-            left: 15px;
-            transform: translateY(-50%);
-            color: #4a90e2;
-            font-weight: bold;
-        }
-        input[type="file"] input[type="file"] {
-            opacity: 0;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
             cursor: pointer;
         }
         input[type="file"]:hover {
@@ -122,22 +88,6 @@
             width: 100%;
             transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        input[type="submit"]::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(45deg) scale(0);
-            transition: transform 0.5s ease;
-        }
-        input[type="submit"]:hover::after {
-            transform: rotate(45deg) scale(1);
         }
         input[type="submit"]:hover {
             background-color: #357ab9;
@@ -164,63 +114,25 @@
             color: #555;
             text-align: center;
             font-size: 1.1rem;
-            animation: fadeIn 1s ease-out forwards 1s;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .output p {
-            margin: 0;
-        }
-        .highlight {
-            background-color: #e0f7fa;
-            color: #006064;
-            padding: 5px;
-            border-radius: 4px;
-            font-weight: bold;
         }
         footer {
             text-align: center;
             margin-top: 40px;
             color: #888;
             font-size: 0.9em;
-            animation: fadeIn 1s ease-out forwards 1.5s;
-            opacity: 0;
-            transform: translateY(20px);
         }
         footer a {
             color: #4a90e2;
             text-decoration: none;
-            transition: color 0.3s ease;
         }
         footer a:hover {
-            color: #357ab9;
             text-decoration: underline;
         }
-
-        /* Анимации */
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .highlight {
+            background-color: #e0f7fa;
+            color: #006064;
+            padding: 5px;
+            border-radius: 4px;
         }
 
         /* Медиазапросы для адаптивности */
