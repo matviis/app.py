@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from io import BytesIO
 import zipfile
+import random
 
 app = Flask(__name__)
 
@@ -23,6 +24,8 @@ def process_emails():
     email_file = request.files['emailFile']
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа, убираем пустые строки
+    segment_percentage = request.form.get('segmentPercentage')  # Получаем процент сегмента
+    segment_percentage = float(segment_percentage) if segment_percentage else 100.0
 
     # Сохранение загруженного файла
     file_path = os.path.join(UPLOAD_FOLDER, email_file.filename)
@@ -30,6 +33,10 @@ def process_emails():
 
     # Загрузка CSV и очистка
     emails_df = load_and_clean_csv(file_path)
+
+    # Если указан процент сегмента, выбираем случайную часть пользователей
+    if segment_percentage < 100:
+        emails_df = select_random_segment(emails_df, segment_percentage)
 
     # Разделение по дневному плану
     daily_email_batches = split_emails_by_plan(emails_df, daily_plan)
@@ -70,6 +77,14 @@ def split_emails_by_plan(emails_df, daily_plan):
         start = end
     
     return daily_email_batches
+
+def select_random_segment(emails_df, percentage):
+    """
+    Выбирает случайный процент сегмента пользователей из базы данных.
+    """
+    total_emails = len(emails_df)
+    sample_size = int(total_emails * (percentage / 100))
+    return emails_df.sample(n=sample_size)
 
 # Запуск приложения с учетом порта, установленного Render или локального порта 5000
 if __name__ == '__main__':
