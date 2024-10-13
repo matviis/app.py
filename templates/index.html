@@ -38,7 +38,7 @@
             font-weight: bold;
             color: #555;
         }
-        input[type="file"], input[type="number"], textarea {
+        input[type="file"], input[type="number"], input[type="text"], textarea {
             padding: 10px;
             font-size: 1rem;
             border: 1px solid #ddd;
@@ -101,6 +101,11 @@
         <div>
             <label for="dailyPlan">Enter daily email plan (one number per line):</label>
             <textarea id="dailyPlan" name="dailyPlan" placeholder="100\n150\n200\n..." required></textarea>
+        </div>
+
+        <div>
+            <label for="baseFilename">Base filename for CSV files:</label>
+            <input type="text" id="baseFilename" name="baseFilename" placeholder="e.g., my_emails">
         </div>
 
         <input type="submit" value="Generate CSV Files">
