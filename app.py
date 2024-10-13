@@ -1,4 +1,3 @@
-import re
 import pandas as pd
 from flask import Flask, request, render_template, send_file
 import os
@@ -35,12 +34,12 @@ def process_emails():
     # Сохраняем загруженные файлы
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
     email_file_1.save(file_path_1)
-    emails_df_1 = load_and_clean_csv(file_path_1)
+    emails_df_1 = load_emails_from_second_column(file_path_1)
 
     if email_file_2:
         file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
         email_file_2.save(file_path_2)
-        emails_df_2 = load_and_clean_csv(file_path_2)
+        emails_df_2 = load_emails_from_second_column(file_path_2)
         print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")  # Отладка второго файла
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
@@ -75,58 +74,17 @@ def process_emails():
     # Отправляем ZIP файл клиенту
     return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='emails.zip')
 
-def load_and_clean_csv(file_path):
+def load_emails_from_second_column(file_path):
     """
-    Загружает CSV и автоматически определяет столбец с почтами. Если заголовков нет, принудительно добавляем.
+    Загружает CSV и возвращает только второй столбец, в котором находятся email-адреса.
     """
     try:
-        # Попробуем загрузить файл с заголовками
         df = pd.read_csv(file_path)
-
-        # Если файл пустой
-        if df.empty:
-            raise ValueError("CSV file is empty.")
-        
-        # Выведем структуру файла для диагностики
-        print("Структура файла:")
-        print(df.head())  # Вывод первых 5 строк файла для диагностики
-        
-        # Проверяем, если в заголовках столбцов нет почт, принудительно задаём заголовки
-        if not any(df.columns.str.contains('@')):
-            print("Заголовков с почтами нет, читаем файл без заголовков.")
-            df = pd.read_csv(file_path, header=None)
-            df.columns = [f"col_{i}" for i in range(len(df.columns))]  # Присваиваем временные названия столбцов
-            print("Новая структура файла после добавления заголовков:")
-            print(df.head())  # Вывод структуры после присвоения заголовков
-        
-        # Автоматически определяем, в каком столбце находятся email-адреса
-        email_column = detect_email_column(df)
-        if email_column is None:
-            raise ValueError("No column with valid emails found.")
-        
-        print(f"Найден столбец с email: {email_column}")
-        emails_df = pd.DataFrame(df[email_column], columns=["email"])
-        print("Первые строки с почтами:")
-        print(emails_df.head())  # Отладка: вывод первых строк с почтами
+        emails_df = pd.DataFrame(df.iloc[:, 1], columns=["email"])  # Возвращаем только второй столбец
         return emails_df
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
         raise
-
-def detect_email_column(df):
-    """
-    Определяет, какой столбец содержит email-адреса.
-    Возвращает название столбца, если найдено.
-    """
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Регулярное выражение для email
-
-    for column in df.columns:
-        # Проверяем каждый столбец, применяя регулярное выражение для email-адресов
-        if df[column].apply(lambda x: isinstance(x, str) and bool(re.match(email_pattern, x))).mean() > 0.5:
-            print(f"Столбец с почтами найден: {column}")
-            return column
-
-    return None  # Возвращает None, если столбец с почтами не найден
 
 def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan):
     """
