@@ -77,12 +77,20 @@ def process_emails():
 
 def load_and_clean_csv(file_path):
     """
-    Загружает CSV и автоматически определяет столбец с почтами.
+    Загружает CSV и автоматически определяет столбец с почтами. Если заголовков нет, принудительно добавляем.
     """
     try:
+        # Попробуем загрузить файл с заголовками
         df = pd.read_csv(file_path)
+
+        # Если файл пустой
         if df.empty:
             raise ValueError("CSV file is empty.")
+        
+        # Определяем, есть ли заголовки. Если нет, читаем файл без заголовков.
+        if not df.columns.str.contains('@').any():
+            print("Заголовков нет или они неправильные. Прочитаем файл без заголовков.")
+            df = pd.read_csv(file_path, header=None)
         
         # Автоматически определяем, в каком столбце находятся email-адреса
         email_column = detect_email_column(df)
