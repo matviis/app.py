@@ -2,7 +2,6 @@ import pandas as pd
 from flask import Flask, request, render_template, send_file
 import os
 from io import BytesIO
-import zipfile
 
 app = Flask(__name__)
 
@@ -11,12 +10,12 @@ UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Главная страница с формой
+# Главная страница с вкладками
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', page='process_emails')
 
-# Обработка формы и генерация файлов
+# Вкладка для обработки почт
 @app.route('/process-emails', methods=['POST'])
 def process_emails():
     # Получение файлов и данных формы
@@ -25,11 +24,10 @@ def process_emails():
     email_file_2 = request.files.get('emailFile2')  # Второй файл (может быть необязательным)
     percentage_2 = float(request.form.get('percentage2', 0)) if email_file_2 else 0  # Процент из второго файла
 
-    # Получаем план по дням, имя файлов и ключевые слова для удаления доменов
+    # Получаем план по дням и имя файлов
     daily_plan = request.form['dailyPlan'].strip().splitlines()  # Получаем план построчно
     daily_plan = [int(x) for x in daily_plan if x.strip()]  # Преобразуем строки в числа
     base_filename = request.form.get('baseFilename', 'emails')  # Имя файлов по умолчанию
-    keyword_input = request.form.get('keyword')  # Ключевые слова для удаления строк (например, домены)
 
     # Сохраняем загруженные файлы
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
@@ -43,20 +41,6 @@ def process_emails():
         print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")  # Отладка второго файла
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
-
-    # Отладочная информация
-    print(f"Первый файл содержит {len(emails_df_1)} email-адресов.")
-    if not emails_df_2.empty:
-        print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")
-    else:
-        print("Второй файл не предоставлен или пустой.")
-
-    # Фильтрация доменов: пропуск строк с доменами
-    if keyword_input:
-        keywords = [kw.strip() for kw in keyword_input.split(',')]  # Разделяем ключевые слова по запятой
-        emails_df_1 = filter_rows_with_keywords(emails_df_1, keywords)
-        if not emails_df_2.empty:
-            emails_df_2 = filter_rows_with_keywords(emails_df_2, keywords)
 
     # Разделение email-адресов по плану на каждый день
     daily_email_batches = split_emails_by_percentage(emails_df_1, emails_df_2, percentage_1, percentage_2, daily_plan)
@@ -74,6 +58,40 @@ def process_emails():
     # Отправляем ZIP файл клиенту
     return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='emails.zip')
 
+# Вкладка для удаления дубликатов
+@app.route('/remove-duplicates', methods=['GET', 'POST'])
+def remove_duplicates():
+    if request.method == 'POST':
+        # Получаем загруженный файл
+        file = request.files['emailFile']
+        if not file:
+            return "No file uploaded.", 400
+        
+        # Сохраняем файл
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(file_path)
+
+        # Загружаем CSV и удаляем дубликаты
+        try:
+            df = pd.read_csv(file_path)
+            email_column = df.columns[1]  # Предполагаем, что email-адреса находятся во втором столбце
+            df = df.drop_duplicates(subset=email_column)
+
+            # Удаляем пробелы после удаления дубликатов
+            df = df.dropna().reset_index(drop=True)
+
+            # Генерируем CSV без дубликатов
+            output = BytesIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+
+            # Отправляем файл клиенту
+            return send_file(output, mimetype='text/csv', as_attachment=True, download_name='cleaned_emails.csv')
+        except Exception as e:
+            return f"An error occurred: {str(e)}", 500
+
+    return render_template('remove_duplicates.html')
+
 def load_emails_from_second_column(file_path):
     """
     Загружает CSV и возвращает только второй столбец, в котором находятся email-адреса.
@@ -89,8 +107,6 @@ def load_emails_from_second_column(file_path):
 def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan):
     """
     Разделяет email-адреса по дням с учётом процентного соотношения.
-    df1 и df2 - базы данных, процентное соотношение percentage_1 и percentage_2,
-    daily_plan - список с количеством почт на каждый день.
     """
     daily_batches = []
     start_1 = 0
@@ -117,14 +133,5 @@ def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan)
 
     return daily_batches
 
-def filter_rows_with_keywords(emails_df, keywords):
-    """
-    Пропускает строки, содержащие одно из ключевых слов (доменов).
-    """
-    pattern = '|'.join(keywords)
-    filtered_emails_df = emails_df[~emails_df['email'].str.contains(pattern, case=False, na=False)]
-    return filtered_emails_df
-
-# Запуск приложения с учётом порта
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
