@@ -14,7 +14,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 50px auto;
             padding: 20px;
             background-color: #fff;
@@ -37,130 +37,57 @@
         }
 
         input[type="file"],
-        input[type="text"],
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s ease-in-out;
-        }
-
-        input[type="file"]:focus,
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        textarea:focus {
-            outline: none;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-
         input[type="submit"] {
             width: 100%;
             padding: 12px;
-            background-color: #28a745;
-            border: none;
+            margin-bottom: 15px;
             border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #28a745;
             color: white;
-            font-size: 18px;
-            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         input[type="submit"]:hover {
             background-color: #218838;
         }
 
-        input[type="submit"]:active {
-            background-color: #1e7e34;
-            box-shadow: none;
+        nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
+        nav a {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
 
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: help;
+        nav a:hover {
+            background-color: #0056b3;
         }
 
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Positioned above the element */
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                width: 90%;
-            }
-
-            h2 {
-                font-size: 20px;
-            }
-
-            input[type="submit"] {
-                font-size: 16px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>Email Processing Tool</h2>
+        <h2>Email Processing Tool</h2>
+        <nav>
+            <a href="/">Process Emails</a>
+            <a href="/remove-duplicates">Remove Duplicates</a>
+        </nav>
+
+        <!-- Контент загружается в зависимости от текущей вкладки -->
+        <div id="content">
+            {% block content %}{% endblock %}
         </div>
-
-        <form action="/process-emails" method="POST" enctype="multipart/form-data">
-            <label for="emailFile1">Upload First CSV File:</label>
-            <input type="file" id="emailFile1" name="emailFile1" accept=".csv" required>
-
-            <label for="percentage1">Percentage from First File:</label>
-            <div class="tooltip">
-                <input type="number" id="percentage1" name="percentage1" min="0" max="100" value="100" required>
-                <span class="tooltiptext">Percentage of emails to take from the first file (0-100%)</span>
-            </div>
-
-            <label for="emailFile2">Upload Second CSV File (Optional):</label>
-            <input type="file" id="emailFile2" name="emailFile2" accept=".csv">
-
-            <label for="percentage2">Percentage from Second File (Optional):</label>
-            <input type="number" id="percentage2" name="percentage2" min="0" max="100" value="0">
-
-            <label for="dailyPlan">Enter Daily Email Plan (One number per line):</label>
-            <textarea id="dailyPlan" name="dailyPlan" rows="5" placeholder="e.g. 50, 100, 150" required></textarea>
-
-            <label for="baseFilename">Base Filename for Generated CSV Files:</label>
-            <input type="text" id="baseFilename" name="baseFilename" placeholder="emails" value="emails">
-
-            <label for="keyword">Filter Out Emails Containing (Comma Separated Keywords):</label>
-            <input type="text" id="keyword" name="keyword" placeholder="e.g. yandex.ru, spam.com">
-
-            <input type="submit" value="Process Emails">
-        </form>
     </div>
 </body>
 </html>
