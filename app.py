@@ -2,6 +2,7 @@ import pandas as pd
 from flask import Flask, request, render_template, send_file
 import os
 from io import BytesIO
+import zipfile
 
 app = Flask(__name__)
 
@@ -32,12 +33,12 @@ def process_emails():
     # Сохраняем загруженные файлы
     file_path_1 = os.path.join(UPLOAD_FOLDER, email_file_1.filename)
     email_file_1.save(file_path_1)
-    emails_df_1 = load_emails_from_second_column(file_path_1)
+    emails_df_1 = load_emails_from_first_column(file_path_1)  # Изменено на первый столбец
 
     if email_file_2:
         file_path_2 = os.path.join(UPLOAD_FOLDER, email_file_2.filename)
         email_file_2.save(file_path_2)
-        emails_df_2 = load_emails_from_second_column(file_path_2)
+        emails_df_2 = load_emails_from_first_column(file_path_2)  # Изменено на первый столбец
         print(f"Второй файл содержит {len(emails_df_2)} email-адресов.")  # Отладка второго файла
     else:
         emails_df_2 = pd.DataFrame()  # Если второго файла нет, делаем пустой DataFrame
@@ -74,7 +75,7 @@ def remove_duplicates():
         # Загружаем CSV и удаляем дубликаты
         try:
             df = pd.read_csv(file_path)
-            email_column = df.columns[1]  # Предполагаем, что email-адреса находятся во втором столбце
+            email_column = df.columns[0]  # Предполагаем, что email-адреса находятся в первом столбце
             df = df.drop_duplicates(subset=email_column)
 
             # Удаляем пробелы после удаления дубликатов
@@ -92,18 +93,25 @@ def remove_duplicates():
 
     return render_template('remove_duplicates.html')
 
-def load_emails_from_second_column(file_path):
+# Функция для загрузки email-адресов из первого столбца
+def load_emails_from_first_column(file_path):
     """
-    Загружает CSV и возвращает только второй столбец, в котором находятся email-адреса.
+    Загружает CSV и возвращает только первый столбец, в котором находятся email-адреса.
     """
     try:
         df = pd.read_csv(file_path)
-        emails_df = pd.DataFrame(df.iloc[:, 1], columns=["email"])  # Возвращаем только второй столбец
+        
+        # Проверка на наличие как минимум одного столбца
+        if df.shape[1] < 1:
+            raise ValueError("Файл не содержит столбцов.")
+        
+        emails_df = pd.DataFrame(df.iloc[:, 0], columns=["email"])  # Возвращаем только первый столбец
         return emails_df
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
         raise
 
+# Функция для разделения email-адресов по процентам
 def split_emails_by_percentage(df1, df2, percentage_1, percentage_2, daily_plan):
     """
     Разделяет email-адреса по дням с учётом процентного соотношения.
